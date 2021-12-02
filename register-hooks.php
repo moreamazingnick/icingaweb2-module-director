@@ -66,6 +66,7 @@ $this->provideHook('monitoring/HostActions');
 $this->provideHook('monitoring/ServiceActions');
 $this->provideHook('cube/Actions', CubeLinks::class);
 $this->provideHook('cube/IcingaDbActions', IcingaDbCubeLinks::class);
+$this->provideHook('Monitoring/CustomVarRenderer');
 
 $directorHooks = [
     'director/DataType' => [
