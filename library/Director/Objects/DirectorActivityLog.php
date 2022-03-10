@@ -8,6 +8,7 @@ use Icinga\Module\Director\Util;
 use Icinga\Authentication\Auth;
 use Icinga\Application\Icinga;
 use Icinga\Application\Logger;
+use Icinga\Util\Json;
 
 class DirectorActivityLog extends DbObject
 {
@@ -163,7 +164,12 @@ class DirectorActivityLog extends DbObject
     {
         $name = $object->getObjectName();
         $type = $object->getTableName();
-        $oldProps = json_encode($object->getPlainUnmodifiedObject());
+
+        if ($object instanceof IcingaServiceSet) {
+            $oldProps = Json::encode($object->getExportPostDelete());
+        } else {
+            $oldProps = json_encode($object->getPlainUnmodifiedObject());
+        }
 
         $data = array(
             'object_name'     => $name,

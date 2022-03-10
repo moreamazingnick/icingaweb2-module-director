@@ -5,6 +5,7 @@ namespace Icinga\Module\Director\Forms;
 use Icinga\Exception\NotFoundError;
 use Icinga\Exception\NotImplementedError;
 use Icinga\Module\Director\Objects\IcingaObject;
+use Icinga\Module\Director\Objects\IcingaServiceSet;
 use Icinga\Module\Director\Web\Form\DirectorForm;
 
 class RestoreObjectForm extends DirectorForm
@@ -78,7 +79,18 @@ class RestoreObjectForm extends DirectorForm
             }
         } else {
             $msg = $this->translate('Object has been re-created');
-            $object->store($db);
+
+            if ($object instanceof IcingaServiceSet) {
+                $export = $object->export();
+
+                foreach ($object->getRestoredServices() as $name => $service) {
+                    $export->services[$name] = $service->toPlainObject();
+                }
+
+                $object::import($export, $this->db);
+            } else {
+                $object->store($db);
+            }
         }
 
         $this->redirectOnSuccess($msg);

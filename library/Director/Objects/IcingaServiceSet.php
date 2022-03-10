@@ -41,9 +41,32 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
 
     protected $supportedInLegacy = true;
 
+    protected $exportPostDelete;
+
     protected $relations = array(
         'host' => 'IcingaHost',
     );
+
+    /** @var IcingaService[] */
+    protected $restoredServices = [];
+
+    /**
+     * @param $services IcingaService[]
+     * @return void
+     */
+    public function setRestoredServices($services)
+    {
+        $this->restoredServices = $services;
+    }
+
+
+    /**
+     * @return IcingaService[]
+     */
+    public function getRestoredServices()
+    {
+        return $this->restoredServices;
+    }
 
     public function isDisabled()
     {
@@ -75,6 +98,11 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
         }
 
         return $this;
+    }
+
+    public function getExportPostDelete()
+    {
+        return $this->exportPostDelete;
     }
 
     /**
@@ -159,7 +187,7 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
     protected function exportTemplate()
     {
         $props = $this->getProperties();
-        unset($props['id'], $props['host_id']);
+        unset($props['id'], $props['host_id'], $props['uuid']);
         $props['services'] = [];
         foreach ($this->getServiceObjects() as $serviceObject) {
             $props['services'][$serviceObject->getObjectName()] = $serviceObject->export();
@@ -258,6 +286,8 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
                 $set->delete();
             }
         }
+
+        $this->exportPostDelete = $this->export();
 
         parent::beforeDelete();
     }
