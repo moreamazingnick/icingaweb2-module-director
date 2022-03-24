@@ -165,11 +165,7 @@ class DirectorActivityLog extends DbObject
         $name = $object->getObjectName();
         $type = $object->getTableName();
 
-        if ($object instanceof IcingaServiceSet) {
-            $oldProps = Json::encode($object->getExportPostDelete());
-        } else {
-            $oldProps = json_encode($object->getPlainUnmodifiedObject());
-        }
+        $oldProps = json_encode($object->getPlainUnmodifiedObject());
 
         $data = array(
             'object_name'     => $name,

@@ -439,7 +439,7 @@ class ActivityLogInfo extends HtmlDocument
     protected function previewServiceSet(IcingaServiceSet $object)
     {
         $config = $object->toSingleIcingaConfig();
-        foreach ($object->getRestoredServices() as $service) {
+        foreach ($object->getServiceObjects() as $service) {
             $service->renderToConfig($config);
         }
 
@@ -632,30 +632,10 @@ class ActivityLogInfo extends HtmlDocument
             $newProps['object_type'] = $props->object_type;
         }
 
-        $object = IcingaObject::createByType(
-            $type,
-            $newProps,
-            $this->db
-        );
-
-        if ($type === 'icinga_service_set' && isset($props->services)) {
-            $services = [];
-            foreach ($props->services as $service) {
-                $serviceProps = ['object_name' => $service->object_name];
-                $serviceProps['object_type'] = $service->object_type;
-                $serviceProps['imports'] = $service->imports;
-
-                $services[$service->object_name] = IcingaObject::createByType(
-                    'icinga_service',
-                    $serviceProps,
-                    $this->db
-                );
-            }
-
-            $object->setRestoredServices($services);
-            unset($props->services);
-        }
-
-        return $object->setProperties((array) $props);
+        return IcingaObject::createByType(
+                $type,
+                $newProps,
+                $this->db
+            )->setProperties((array) $props);
     }
 }

@@ -4,6 +4,7 @@ namespace Icinga\Module\Director\Objects;
 
 use Exception;
 use Icinga\Data\Filter\Filter;
+use Icinga\Module\Director\Data\Db\DbConnection;
 use Icinga\Module\Director\Db;
 use Icinga\Module\Director\Db\Cache\PrefetchCache;
 use Icinga\Module\Director\Db\DbUtil;
@@ -41,32 +42,12 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
 
     protected $supportedInLegacy = true;
 
-    protected $exportPostDelete;
-
     protected $relations = array(
         'host' => 'IcingaHost',
     );
 
     /** @var IcingaService[] */
-    protected $restoredServices = [];
-
-    /**
-     * @param $services IcingaService[]
-     * @return void
-     */
-    public function setRestoredServices($services)
-    {
-        $this->restoredServices = $services;
-    }
-
-
-    /**
-     * @return IcingaService[]
-     */
-    public function getRestoredServices()
-    {
-        return $this->restoredServices;
-    }
+    protected $services = [];
 
     public function isDisabled()
     {
@@ -100,17 +81,16 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
         return $this;
     }
 
-    public function getExportPostDelete()
-    {
-        return $this->exportPostDelete;
-    }
-
     /**
      * @return IcingaService[]
      * @throws \Icinga\Exception\NotFoundError
      */
     public function getServiceObjects()
     {
+        if ($this->services) {
+            return $this->services;
+        }
+
         // don't try to resolve services for unstored objects - as in getServiceObjectsForSet()
         // also for diff in activity log
         if ($this->get('id') === null) {
@@ -277,6 +257,22 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
         return $object;
     }
 
+    public function setProperties($props)
+    {
+        if (is_array($props)) {
+            if (array_key_exists('services', $props) && ! $this->hasBeenLoadedFromDb()) {
+                $services = $props['services'];
+                foreach ($services as $name => $service) {
+                    $this->services[$name]  = IcingaService::create((array) $service, $this->getConnection());
+                }
+            }
+
+            unset($props['services']);
+        }
+
+        return parent::setProperties($props);
+    }
+
     public function beforeDelete()
     {
         // check if this is a template, or directly assigned to a host
@@ -287,7 +283,10 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
             }
         }
 
-        $this->exportPostDelete = $this->export();
+        foreach ($this->getServiceObjects() as $name => $service) {
+            $service->setLoadedProperty('service_set_id', null);
+            $this->services[$name] = $service;
+        }
 
         parent::beforeDelete();
     }
@@ -317,6 +316,20 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
         }
 
         parent::onDelete();
+    }
+
+    public function getPlainUnmodifiedObject()
+    {
+        $object = parent::getPlainUnmodifiedObject();
+
+        $services = [];
+
+        foreach ($this->getServiceObjects() as $name => $service) {
+            $services[$name] = $service->getPlainUnmodifiedObject();
+        }
+
+        $object->services = $services;
+        return $object;
     }
 
     /**
@@ -596,6 +609,17 @@ class IcingaServiceSet extends IcingaObject implements ExportInterface
                 $name
             );
         }
+    }
+
+    /**
+     * @return void
+     * @throws DuplicateKeyException
+     * @throws \Icinga\Exception\NotFoundError
+     */
+    public function onStore()
+    {
+        parent::onStore();
+        self::import($this->export(), $this->getConnection(), true);
     }
 
     public function toSingleIcingaConfig()

@@ -177,7 +177,10 @@ class IcingaService extends IcingaObject implements ExportInterface
     {
         // TODO: ksort in toPlainObject?
         $props = (array) $this->toPlainObject();
-        $props['fields'] = $this->loadFieldReferences();
+        if ($this->hasBeenLoadedFromDb()) {
+            $props['fields'] = $this->loadFieldReferences();
+        }
+
         ksort($props);
 
         return (object) $props;
