@@ -172,6 +172,7 @@ class IcingaCloneObjectForm extends DirectorForm
             $new->set('host', null);
             $new->set('object_type', 'object');    
         } elseif ($host = $this->getValue('target_host')) {
+            $new->set('service_set_id', null);
             $new->set('host', $host);
             $new->set('object_type', 'object'); 
         }
