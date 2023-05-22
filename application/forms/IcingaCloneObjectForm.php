@@ -73,16 +73,16 @@ class IcingaCloneObjectForm extends DirectorForm
         }
 
         if ($this->object instanceof IcingaService) {
-            if ($this->object->get('service_set_id') !== null) {
+            if ($this->object->get('service_set_id') !== null || $this->object->get('host_id') !== null) {
                 $this->addElement('select', 'target_service_set', [
                     'label'        => $this->translate('Target Service Set'),
                     'description'  => $this->translate(
                         'Clone this service to the very same or to another Service Set'
                     ),
-                    'multiOptions' => $this->enumServiceSets(),
+                    'multiOptions' => array_merge([""=>""], $this->enumServiceSets()),
                     'value'        => $this->object->get('service_set_id')
                 ]);
-            } elseif ($this->object->get('host_id') !== null) {
+
                 $this->addElement('text', 'target_host', [
                     'label'                   => $this->translate('Target Host'),
                     'description'             => $this->translate(
@@ -166,8 +166,11 @@ class IcingaCloneObjectForm extends DirectorForm
                 'service_set_id',
                 IcingaServiceSet::loadWithAutoIncId((int) $set, $connection)->get('id')
             );
+            $new->set('host', null);
+            $new->set('object_type', 'object');
         } elseif ($host = $this->getValue('target_host')) {
             $new->set('host', $host);
+            $new->set('object_type', 'object');
         }
 
         $services = [];
@@ -247,6 +250,7 @@ class IcingaCloneObjectForm extends DirectorForm
         return $db->fetchPairs(
             $db->select()
                 ->from('icinga_service_set', ['id', 'object_name'])
+                ->where('object_type = ?','template')
                 ->order('object_name')
         );
     }
