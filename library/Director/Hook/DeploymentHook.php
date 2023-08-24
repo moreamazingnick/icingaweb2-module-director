@@ -17,6 +17,16 @@ abstract class DeploymentHook
     }
 
     /**
+     * Please override this method if you want to change the deployed files
+     * in any way
+     *
+     * @param array $files
+     */
+    public static function beforeDump($files){
+
+    }
+
+    /**
      * Please override this method if you want to trigger custom actions
      * on a successful dump of the Icinga configuration
      *

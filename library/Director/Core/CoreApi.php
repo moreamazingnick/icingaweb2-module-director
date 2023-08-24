@@ -846,16 +846,19 @@ constants
             // 'module_name'    => $moduleName,
         ));
 
+        $files = $config->getFileContents();
+
         /** @var DeploymentHook[] $hooks */
         $hooks = Hook::all('director/Deployment');
         foreach ($hooks as $hook) {
             $hook->beforeDeploy($deployment);
+            $hook::beforeDump($files);
         }
 
         $this->assertPackageExists($packageName);
 
         $response = $this->client()->post('config/stages/' . \rawurlencode($packageName), [
-            'files' => $config->getFileContents()
+            'files' => $files
         ]);
 
         $duration = (int) ((microtime(true) - $start) * 1000);
