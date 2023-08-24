@@ -852,7 +852,7 @@ constants
         $hooks = Hook::all('director/Deployment');
         foreach ($hooks as $hook) {
             $hook->beforeDeploy($deployment);
-            $hook::beforeDump($files);
+            $files = $hook->beforeDump($files);
         }
 
         $this->assertPackageExists($packageName);

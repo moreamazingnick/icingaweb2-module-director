@@ -16,14 +16,16 @@ abstract class DeploymentHook
     {
     }
 
-    /**
-     * Please override this method if you want to change the deployed files
-     * in any way
-     *
-     * @param array $files
-     */
-    public static function beforeDump($files){
 
+    /**
+     *
+     * Please override this method if you want to change the deployed files before writing them to disk
+     *
+     * @param $files
+     * @return array with $files
+     */
+    public function beforeDump($files){
+        return $files;
     }
 
     /**
